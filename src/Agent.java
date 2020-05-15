@@ -105,8 +105,8 @@ public class Agent extends Entity {
 	public void agentReactiveDecision() {
 	  ahead = aheadPosition();
 	  if(isWall()) rotateRandomly();
-	  else if(isRamp() && isBoxAhead() && !cargo()) grabBox();
-	  else if(isShelf() && !isBoxAhead() && cargo() && shelfColor().equals(cargoColor())) dropBox();
+	  //else if(isRamp() && isBoxAhead() && !cargo()) grabBox();
+	  //else if(isShelf() && !isBoxAhead() && cargo() && shelfColor().equals(cargoColor())) dropBox();
 	  else if(!isFreeCell()) rotateRandomly();
 	  else if(random.nextInt(5) == 0) rotateRandomly();
 	  else moveAhead();
@@ -188,15 +188,10 @@ public class Agent extends Entity {
 	public boolean cargo() {
 		return cargo != null;
 	}
-	
-	/* Return the color of the box */
-	public Color cargoColor() {
-	  return cargo.color;
-	}
 
-	/* Return the color of the shelf ahead or 0 otherwise */
-	public Color shelfColor(){
-		return Board.getBlock(ahead).color;
+	/* Return the destination of the mail */
+	public Point cargoDestination() {
+	  return cargo.point;
 	}
 
 	/* Check if the cell ahead is floor (which means not a wall, not a shelf nor a ramp) and there are any robot there */
@@ -206,12 +201,6 @@ public class Agent extends Entity {
 
 	public boolean isRoomFloor() {
 		return Board.getBlock(ahead).shape.equals(Shape.free);
-	}
-	
-	/* Check if the cell ahead contains a box */
-	public boolean isBoxAhead(){
-		Entity entity = Board.getEntity(ahead);
-		return entity!=null && entity instanceof Mail;
 	}
 
 	/* Return the type of cell */
@@ -224,26 +213,20 @@ public class Agent extends Entity {
 	  return Board.getBlock(ahead).color;
 	}
 
-	/* Check if the cell ahead is a shelf */
-	public boolean isShelf() {
+	/* Check if the cell ahead is a warehouse */
+	public boolean isWarehouse() {
 	  Block block = Board.getBlock(ahead);
-	  return block.shape.equals(Shape.shelf);
-	}
-
-	/* Check if the cell ahead is a ramp */
-	public boolean isRamp(){
-	  Block block = Board.getBlock(ahead);
-	  return block.shape.equals(Shape.ramp);
+	  return block.shape.equals(Shape.warehouse);
 	}
 
 	/* Check if the cell ahead is a wall */
 	private boolean isWall() {
-		return ahead.x<0 || ahead.y<0 || ahead.x>=Board.nX || ahead.y>=Board.nY;
+		return ahead.x<0 || ahead.y<0 || ahead.x>=Board.N_X || ahead.y>=Board.N_Y;
 	}
 
 	/* Check if the cell ahead is a wall */
 	private boolean isWall(int x, int y) {
-		return x<0 || y<0 || x>=Board.nX || y>=Board.nY;
+		return x<0 || y<0 || x>=Board.N_X || y>=Board.N_Y;
 	}
 
 	/**********************/
@@ -269,19 +252,19 @@ public class Agent extends Entity {
 	/* Move agent forward */
 	public void moveAhead() {
 		Board.updateEntityPosition(point,ahead);
-		if(cargo()) cargo.moveBox(ahead);
+		if(cargo()) cargo.moveMail(ahead);
 		point = ahead;
 	}
 
 	/* Cargo box */
-	public void grabBox() {
+	public void grabMail() {
 	  cargo = (Mail) Board.getEntity(ahead);
-	  cargo.grabBox(point);
+	  cargo.grabMail(point);
 	}
 
 	/* Drop box */
-	public void dropBox() {
-		cargo.dropBox(ahead);
+	public void dropMail() {
+		cargo.dropMail(ahead);
 	    cargo = null;
 	}
 	

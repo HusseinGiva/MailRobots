@@ -6,6 +6,7 @@ import java.awt.Color;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 
 /**
@@ -16,11 +17,11 @@ public class Board {
 
 	/** The environment */
 
-	public static int nX = 10, nY = 10;
+	public static final int N_X = 10, N_Y = 10, WAREHOUSES = 2, INIT_MAILS = 1000, N_ROBOTS = 3;;
 	private static Block[][] board;
 	private static Entity[][] objects;
 	private static List<Agent> robots;
-	private static List<Mail> boxes;
+	private static List<Warehouse> warehouses;
 	
 	
 	/****************************
@@ -28,36 +29,42 @@ public class Board {
 	 ****************************/
 	
 	public static void initialize() {
-		
+
 		/** A: create board */
-		board = new Block[nX][nY];
-		for(int i=0; i<nX; i++) 
-			for(int j=0; j<nY; j++) 
+		board = new Block[Board.N_X][Board.N_Y];
+		for(int i = 0; i< Board.N_X; i++)
+			for(int j = 0; j< Board.N_Y; j++)
 				board[i][j] = new Block(Shape.free, Color.lightGray);
-				
-		/** B: create ramp, boxes and shelves */
-		int rampX = 4, rampY = 3;
-		Color[] colors = new Color[] {Color.red, Color.blue, Color.green, Color.yellow};
-		boxes = new ArrayList<Mail>();
-		for(int i=rampX, k=0; i<2*rampX; i++) {
-			for(int j=0; j<rampY; j++) {
-				board[i][j] = new Block(Shape.ramp, Color.gray);
-				if((j==0||j==1) && (i==(rampX+1)||i==(rampX+2))) continue;
-				else boxes.add(new Mail(new Point(i,j), colors[k++%4]));
-			}
+
+		Random rd = new Random();
+		/** B: create warehouses */
+		warehouses = new ArrayList<>();
+		for (int i = 0; i < WAREHOUSES; i++) {
+			Point point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+			Warehouse warehouse = new Warehouse(Shape.warehouse, point, Color.red, INIT_MAILS, N_X, N_Y);
+			warehouses.add(warehouse);
+			board[point.x][point.y] = warehouse;
 		}
-		Point[] pshelves = new Point[] {new Point(0,6), new Point(0,8), new Point(8,6), new Point(8,8)};
-		for(int k=0; k<pshelves.length; k++) 
-			for(int i=0; i<2; i++) 
-				board[pshelves[k].x+i][pshelves[k].y] = new Block(Shape.shelf, colors[k]);
+
+		/** C: create agents randomly dispersed */
+		robots = new ArrayList<>();
+		for(int j = 0; j< N_ROBOTS; j++) {
+			Point point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+			// avoid the warehouse point
+			boolean different = false;
+			while (!different) {
+				for (Warehouse w: warehouses) {
+					if (w.point.equals(point)){
+						point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+						break;
+					}
+				}
+				different = true;
+			}
+			robots.add(new Agent(point, Color.pink));
+		}
 		
-		/** C: create agents */
-		int nrobots = 3;
-		robots = new ArrayList<Agent>();
-		for(int j=0; j<nrobots; j++) robots.add(new Agent(new Point(0,j), Color.pink));
-		
-		objects = new Entity[nX][nY];
-		for(Mail box : boxes) objects[box.point.x][box.point.y]=box;
+		objects = new Entity[Board.N_X][Board.N_Y];
 		for(Agent agent : robots) objects[agent.point.x][agent.point.y]=agent;
 	}
 	
@@ -140,12 +147,10 @@ public class Board {
 
 	public static void displayObjects(){
 		for(Agent agent : robots) GUI.displayObject(agent);
-		for(Mail box : boxes) GUI.displayObject(box);
 	}
 	
 	public static void removeObjects(){
 		for(Agent agent : robots) GUI.removeObject(agent);
-		for(Mail box : boxes) GUI.removeObject(box);
 	}
 	
 	public static void associateGUI(GUI graphicalInterface) {

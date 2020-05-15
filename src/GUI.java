@@ -44,24 +44,18 @@ public class GUI extends JFrame {
             super.paintComponent(g);
             for(Entity entity : entities) {
 	            g.setColor(entity.color);
-	            if(entity instanceof Mail) {
-	            	g.fillRect(15, 15, 20, 20);
-		            g.setColor(Color.white);
-	            	g.drawRect(15, 15, 20, 20);
-	            } else {
-	        		switch(((Agent)entity).direction) {
-		    			case 0:  g.fillPolygon(new int[]{10, 25, 40}, new int[]{40, 10, 40}, 3); break;
-		    			case 90: g.fillPolygon(new int[]{10, 40, 10}, new int[]{10, 25, 40}, 3); break;
-		    			case 180:g.fillPolygon(new int[]{10, 40, 25}, new int[]{10, 10, 40}, 3); break;
-		    			default: g.fillPolygon(new int[]{10, 40, 40}, new int[]{25, 10, 40}, 3); 
-		    		}
-	            }
+				switch(((Agent)entity).direction) {
+					case 0:  g.fillPolygon(new int[]{10, 25, 40}, new int[]{40, 10, 40}, 3); break;
+					case 90: g.fillPolygon(new int[]{10, 40, 10}, new int[]{10, 25, 40}, 3); break;
+					case 180:g.fillPolygon(new int[]{10, 40, 25}, new int[]{10, 10, 40}, 3); break;
+					default: g.fillPolygon(new int[]{10, 40, 40}, new int[]{25, 10, 40}, 3);
+				}
             }
         }
 	}
 
 	public GUI() {
-		setTitle("FirePrevention");		
+		setTitle("Mail delivery");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setLayout(null);
 		setSize(555, 625);
@@ -74,8 +68,8 @@ public class GUI extends JFrame {
 		boardPanel.setSize(new Dimension(500,500));
 		boardPanel.setLocation(new Point(20,60));
 		
-		nX = Board.nX;
-		nY = Board.nY;
+		nX = Board.N_X;
+		nY = Board.N_Y;
 		boardPanel.setLayout(new GridLayout(nX,nY));
 		for(int i=0; i<nX; i++)
 			for(int j=0; j<nY; j++)

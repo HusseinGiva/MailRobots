@@ -13,17 +13,21 @@ public class Mail extends Entity {
 	 ***** AUXILIARY METHODS ***** 
 	 *****************************/
 
-	public void grabBox(Point newpoint) {
+	public void grabMail(Point newpoint) {
 		Board.removeEntity(point);
 		point = newpoint;
 	}
 	
-	public void dropBox(Point newpoint) {
+	public void dropMail(Point newpoint) {
 		Board.insertEntity(this,newpoint);
 		point = newpoint;
 	}
 
-	public void moveBox(Point newpoint) {
+	public void moveMail(Point newpoint) {
 		point = newpoint;
+	}
+
+	public double distanceTo(Point destination) {
+		return destination.distance(this.point);
 	}
 }
