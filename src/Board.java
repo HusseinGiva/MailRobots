@@ -17,7 +17,7 @@ public class Board {
 
 	/** The environment */
 
-	public static final int N_X = 10, N_Y = 10, WAREHOUSES = 2, INIT_MAILS = 1000, N_ROBOTS = 3;;
+	public static final int N_X = 10, N_Y = 10, WAREHOUSES = 2, INIT_MAILS = 1000, N_ROBOTS = 3;
 	private static Block[][] board;
 	private static Entity[][] objects;
 	private static List<Agent> robots;
