@@ -8,10 +8,14 @@ public class Mail extends Entity {
 	private static Long ID = 0L;
 
 	private final Long id;
+	private Point dest;
+	private Point source;
 
-	public Mail(Point point, Color color) {
-		super(point, color);
+	public Mail(Point source, Point dest, Color color) {
+		super(source, color);
 		this.id = Mail.ID++;
+		this.dest = dest;
+		this.source = source;
 	}
 
 	/*****************************
@@ -24,7 +28,7 @@ public class Mail extends Entity {
 	}
 	
 	public void dropMail(Point newpoint) {
-		Board.insertEntity(this,newpoint);
+		Board.insertEntity(this, newpoint);
 		point = newpoint;
 	}
 
@@ -32,11 +36,15 @@ public class Mail extends Entity {
 		point = newpoint;
 	}
 
-	public double distanceTo(Point destination) {
-		return destination.distance(this.point);
+	public double distanceToDest() {
+		return this.dest.distance(this.point);
 	}
 
 	public Long getMailId() {
 		return id;
+	}
+
+	public Point getMailDest() {
+		return dest;
 	}
 }

@@ -9,7 +9,6 @@ import src.Block.Shape;
 
 /**
  * Agent behavior
- * @author Rui Henriques
  */
 public class Agent extends Entity {
 
@@ -22,9 +21,9 @@ public class Agent extends Entity {
 	public Mail mail;
 	
 	public Point initialPoint;
-	public int boxesOnShelves, boxesOnRamp;
-	public Map<Point,Block> warehouse; //internal map of the warehouse
-	public List<Point> freeShelves; //free shelves
+	public int mailDelivered, mailLeft;
+	public Map<Point,Block> cityMap; //internal map of the city
+	//public List<Point> freeShelves; //free shelves
 	public List<Point> boxedRamp; //ramp cells with boxes
 	
 	public List<Desire> desires;
@@ -38,14 +37,14 @@ public class Agent extends Entity {
 		super(point, color);
 		mail = null;
 		initialPoint = point;
-		boxesOnShelves = 0;
-		boxesOnRamp = NUM_BOXES;
+		mailDelivered = 0;
+		mailLeft = NUM_MAIL;
 		freeShelves = new ArrayList<Point>();
 		boxedRamp = new ArrayList<Point>();
-		warehouse = new HashMap<Point,Block>();
+		cityMap = new HashMap<Point,Block>();
 		plan = new LinkedList<Action>();
-	} 
-	
+	}
+
 	/**********************
 	 **** A: decision ***** 
 	 **********************/
@@ -71,8 +70,8 @@ public class Agent extends Entity {
 
 		desires = new ArrayList<Desire>();
 		if(cargo()) desires.add(Desire.drop);
-		if(boxesOnRamp > 0) desires.add(Desire.grab);
-		if(boxesOnRamp == 0) desires.add(Desire.initialPosition);
+		if(mailLeft > 0) desires.add(Desire.grab);
+		if(mailLeft == 0) desires.add(Desire.initialPosition);
 		intention = new AbstractMap.SimpleEntry<>(desires.get(0),null);
 
 		switch(intention.getKey()) { //high-priority desire
@@ -81,9 +80,9 @@ public class Agent extends Entity {
 				break;
 			case drop :
 				Color boxcolor = cargoColor();
-				for(Point shelf : freeShelves)
-					if(warehouse.get(shelf).color.equals(boxcolor)) {
-						intention.setValue(shelf);
+				for(Point house : houses)
+					if(cityMap.get(house).point.equals(boxcolor)) {
+						intention.setValue(house);
 						break;
 					}
 				break;
@@ -257,13 +256,13 @@ public class Agent extends Entity {
 	/********************/
 
 	/* Check if agent is carrying box */
-	public boolean cargo() {
-		return cargo != null;
+	public boolean mail() {
+		return mail != null;
 	}
 
 	/* Return the color of the box */
-	public Color cargoColor() {
-		return cargo.color;
+	public Color cargoDest() {
+		return mail.color;
 	}
 
 	/* Return the color of the shelf ahead or 0 otherwise */
@@ -347,21 +346,21 @@ public class Agent extends Entity {
 	/* Move agent forward */
 	public void moveAhead() {
 		Board.updateEntityPosition(point,ahead);
-		if(cargo()) cargo.moveBox(ahead);
+		if(cargo()) mail.moveMail(ahead);
 		point = ahead;
 	}
 
 	/* Cargo box */
 	public void grabBox() {
-		cargo = (Box) Board.getEntity(ahead);
-		cargo.grabBox(point);
+		mail = (Mail) Board.getEntity(ahead);
+		mail.grabMail(point);
 		Board.sendMessage(Action.grab, ahead);
 	}
 
 	/* Drop box */
 	public void dropBox() {
-		cargo.dropBox(ahead);
-		cargo = null;
+		mail.dropMail(ahead);
+		mail = null;
 		Board.sendMessage(Action.drop, ahead);
 	}
 
@@ -411,7 +410,7 @@ public class Agent extends Entity {
 			for (int i = 0; i < 4; i++) {
 				int x = pt.x + row[i], y = pt.y + col[i];
 				if(x==dest.x && y==dest.y) return new Node(dest,curr);
-				if(!isWall(x,y) && !warehouse.containsKey(new Point(x,y)) && !visited[x][y]){
+				if(!isWall(x,y) && !cityMap.containsKey(new Point(x,y)) && !visited[x][y]){
 					visited[x][y] = true;
 					q.add(new Node(new Point(x,y), curr));
 				}

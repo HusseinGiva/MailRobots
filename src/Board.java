@@ -1,11 +1,14 @@
 package src;
 
-import src.Block.Shape;
-
 import java.awt.Color;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
+
+import src.Agent.Action;
+import src.Block.Shape;
+
+
 import java.util.Random;
 
 
@@ -23,8 +26,9 @@ public class Board {
 	private static List<Agent> robots;
 	private static List<Warehouse> warehouses;
 	private static List<House> houses;
-	
-	
+	private static List<Mail> packages;
+
+
 	/****************************
 	 ***** A: SETTING BOARD *****
 	 ****************************/
@@ -39,30 +43,7 @@ public class Board {
 
 		Random rd = new Random();
 
-		/** B: create warehouses */
-		warehouses = new ArrayList<>();
-		for (int i = 0; i < WAREHOUSES; i++) {
-			Point point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
-			boolean different = false;
-			boolean exit = true;
-			while (!different) {
-				for (Warehouse w: warehouses) {
-					if (w.point.equals(point)) {
-						point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
-						exit = false;
-						break;
-					}
-				}
-				if (exit == true) {
-					different = true;
-				}
-			}
-			Warehouse warehouse = new Warehouse(Shape.warehouse, point, Color.red, INIT_MAILS, N_X, N_Y);
-			warehouses.add(warehouse);
-			board[point.x][point.y] = warehouse;
-		}
-
-		/** C: create destinations */
+		/** B: create destinations */
 		houses = new ArrayList<>();
 		for (int i = 0; i < HOUSES; i++) {
 			Point point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
@@ -70,13 +51,6 @@ public class Board {
 			boolean different = false;
 			boolean exit = true;
 			while (!different) {
-				for (Warehouse w : warehouses) {
-					if (w.point.equals(point)) {
-						point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
-						exit = false;
-						break;
-					}
-				}
 				for (House h : houses) {
 					if (h.point.equals(point)) {
 						point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
@@ -91,6 +65,36 @@ public class Board {
 			House house = new House(Shape.house, point, Color.green);
 			houses.add(house);
 			board[point.x][point.y] = house;
+		}
+
+		/** C: create warehouses */
+		warehouses = new ArrayList<>();
+		for (int i = 0; i < WAREHOUSES; i++) {
+			Point point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+			boolean different = false;
+			boolean exit = true;
+			while (!different) {
+				for (Warehouse w : warehouses) {
+					if (w.point.equals(point)) {
+						point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+						exit = false;
+						break;
+					}
+				}
+				for (House h: houses) {
+					if (h.point.equals(point)) {
+						point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+						exit = false;
+						break;
+					}
+				}
+				if (exit == true) {
+					different = true;
+				}
+			}
+			Warehouse warehouse = new Warehouse(Shape.warehouse, point, Color.red, INIT_MAILS, N_X, N_Y, warehouses);
+			warehouses.add(warehouse);
+			board[point.x][point.y] = warehouse;
 		}
 
 		/** D: create agents randomly dispersed */
@@ -186,10 +190,14 @@ public class Board {
 		GUI.update();
 	}
 
-	public static void broadcastBeliefs(Object object) {
-		for(Agent a : robots) a.receiveMessage(object);		
+	public static void sendMessage(Point point, Shape shape, Color color, boolean free) {
+		for(Agent a : robots) a.receiveMessage(point, shape, color, free);
 	}
-	
+
+	public static void sendMessage(Action action, Point pt) {
+		for(Agent a : robots) a.receiveMessage(action, pt);
+	}
+
 	public static void step() {
 		removeObjects();
 		for(Agent a : robots) a.agentDecision();
@@ -204,12 +212,14 @@ public class Board {
 
 	public static void displayObjects(){
 		for(Agent agent : robots) GUI.displayObject(agent);
+		for(Mail mail : packages) GUI.displayObject(mail);
 	}
-	
+
 	public static void removeObjects(){
 		for(Agent agent : robots) GUI.removeObject(agent);
+		for(Mail mail : packages) GUI.removeObject(mail);
 	}
-	
+
 	public static void associateGUI(GUI graphicalInterface) {
 		GUI = graphicalInterface;
 	}
