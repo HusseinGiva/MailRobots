@@ -17,11 +17,12 @@ public class Board {
 
 	/** The environment */
 
-	public static final int N_X = 10, N_Y = 10, WAREHOUSES = 2, INIT_MAILS = 1000, N_ROBOTS = 3;
+	public static final int N_X = 10, N_Y = 10, WAREHOUSES = 2, INIT_MAILS = 1000, N_ROBOTS = 3, HOUSES = 5;
 	private static Block[][] board;
 	private static Entity[][] objects;
 	private static List<Agent> robots;
 	private static List<Warehouse> warehouses;
+	private static List<House> houses;
 	
 	
 	/****************************
@@ -37,33 +38,89 @@ public class Board {
 				board[i][j] = new Block(Shape.free, Color.lightGray);
 
 		Random rd = new Random();
+
 		/** B: create warehouses */
 		warehouses = new ArrayList<>();
 		for (int i = 0; i < WAREHOUSES; i++) {
 			Point point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+			boolean different = false;
+			boolean exit = true;
+			while (!different) {
+				for (Warehouse w: warehouses) {
+					if (w.point.equals(point)) {
+						point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+						exit = false;
+						break;
+					}
+				}
+				if (exit == true) {
+					different = true;
+				}
+			}
 			Warehouse warehouse = new Warehouse(Shape.warehouse, point, Color.red, INIT_MAILS, N_X, N_Y);
 			warehouses.add(warehouse);
 			board[point.x][point.y] = warehouse;
 		}
 
-		/** C: create agents randomly dispersed */
+		/** C: create destinations */
+		houses = new ArrayList<>();
+		for (int i = 0; i < HOUSES; i++) {
+			Point point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+			// avoid the warehouse point
+			boolean different = false;
+			boolean exit = true;
+			while (!different) {
+				for (Warehouse w : warehouses) {
+					if (w.point.equals(point)) {
+						point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+						exit = false;
+						break;
+					}
+				}
+				for (House h : houses) {
+					if (h.point.equals(point)) {
+						point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+						exit = false;
+						break;
+					}
+				}
+				if (exit == true) {
+					different = true;
+				}
+			}
+			House house = new House(Shape.house, point, Color.green);
+			houses.add(house);
+			board[point.x][point.y] = house;
+		}
+
+		/** D: create agents randomly dispersed */
 		robots = new ArrayList<>();
 		for(int j = 0; j< N_ROBOTS; j++) {
 			Point point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
 			// avoid the warehouse point
 			boolean different = false;
+			boolean exit = true;
 			while (!different) {
-				for (Warehouse w: warehouses) {
-					if (w.point.equals(point)){
+				for (Warehouse w : warehouses) {
+					if (w.point.equals(point)) {
 						point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+						exit = false;
 						break;
 					}
 				}
-				different = true;
+				for (House h : houses) {
+					if (h.point.equals(point)) {
+						point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+						exit = false;
+						break;
+					}
+				}
+				if (exit == true) {
+					different = true;
+				}
 			}
 			robots.add(new Agent(point, Color.pink));
 		}
-		
 		objects = new Entity[Board.N_X][Board.N_Y];
 		for(Agent agent : robots) objects[agent.point.x][agent.point.y]=agent;
 	}
