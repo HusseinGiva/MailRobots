@@ -1,14 +1,14 @@
 package src;
 
-import com.sun.javafx.tk.Toolkit;
 
 import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 public class Warehouse extends Block {
 
     public Point point;
-    private Queue<Mail> mails;
+    private List<Mail> mails;
 
     public Warehouse(Shape shape, Point point, Color color, int initialMails, int nX, int nY) {
         super(shape, color);
@@ -16,8 +16,8 @@ public class Warehouse extends Block {
         this.mails = generateRandomMails(initialMails, nX, nY, point);
     }
 
-    private static Queue<Mail> generateRandomMails(int initialMails, int nX, int nY, Point avoid) {
-        Queue<Mail> resp = new LinkedList<>();
+    private static List<Mail> generateRandomMails(int initialMails, int nX, int nY, Point avoid) {
+        List<Mail> resp = new LinkedList<>();
         Random rd = new Random();
         for (int i = 0; i < initialMails; i++) {
             // generate the delivery point for the mail
@@ -30,11 +30,12 @@ public class Warehouse extends Block {
     }
 
 
-    /**
-     * @return A Mail or null if empty
-     */
-    public Mail getMail() {
-        return mails.poll();
+    public List<Mail> getMailList() {
+        return mails;
+    }
+
+    public void removeMail(Mail mail) {
+        mails.remove(mail);
     }
 
     public Boolean isEmpty() {
