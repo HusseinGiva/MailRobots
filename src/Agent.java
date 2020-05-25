@@ -40,7 +40,7 @@ public class Agent extends Entity {
 	 **** A: decision ***** 
 	 **********************/
 
-	public void agentDecision() {
+	public String agentDecision() {
 		if (mailDelivered < totalMail) {
 			updateBeliefs();
 			if ((!plan.isEmpty()) && (!succeededIntention()) && (!impossibleIntention())) {
@@ -63,6 +63,8 @@ public class Agent extends Entity {
 				}
 			}
 		}
+		if(mailLeft == 0) return "STOP";
+		return "CONTINUE";
 	}
 
 	private void deliberate() {
@@ -343,13 +345,13 @@ public class Agent extends Entity {
 	/* Grab package */
 	public void grabMail() {
 		mail = getBestPackageWarehouse(ahead);
-		System.out.println("pickup " + mail.getMailSource() + " " + mail.getMailDest());
+		//System.out.println("pickup " + mail.getMailSource() + " " + mail.getMailDest());
 		Board.sendMessage(Action.grab, mail);
 	}
 
 	/* Drop package */
 	public void dropMail() {
-		System.out.println("dropoff " + mail.getMailSource() + " " + mail.getMailDest());
+		//System.out.println("dropoff " + mail.getMailSource() + " " + mail.getMailDest());
 		Board.sendMessage(Action.drop, mail);
 		mail = null;
 	}
@@ -384,7 +386,7 @@ public class Agent extends Entity {
 				minimumDist = point.distance(m.getMailSource()) + m.getMailSource().distance(m.getMailDest());
 			}
 		}
-		// Agent with common optimality in its interest
+		/*// Agent with common optimality in its interest
 		minimumDist = point.distance(mailList.get(0).getMailSource()) + mailList.get(0).getMailSource().distance(mailList.get(0).getMailDest());
 		for (Mail m: mailList) {
 			if ((point.distance(m.getMailSource()) + m.getMailSource().distance(m.getMailDest())) < minimumDist) {
@@ -395,7 +397,7 @@ public class Agent extends Entity {
 					}
 				}
 			}
-		}
+		}*/
 		return minimum;
 	}
 

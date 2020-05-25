@@ -41,26 +41,30 @@ public class GUI extends JFrame {
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            for(Entity entity : entities) {
-	            g.setColor(entity.color);
-				switch(((Agent)entity).direction) {
-					case 0:  g.fillPolygon(new int[]{10, 25, 40}, new int[]{40, 10, 40}, 3); break;
-					case 90: g.fillPolygon(new int[]{10, 40, 10}, new int[]{10, 25, 40}, 3); break;
-					case 180:g.fillPolygon(new int[]{10, 40, 25}, new int[]{10, 10, 40}, 3); break;
-					default: g.fillPolygon(new int[]{10, 40, 40}, new int[]{25, 10, 40}, 3);
+            try {
+				for(Entity entity : entities) {
+					g.setColor(entity.color);
+					switch(((Agent)entity).direction) {
+						case 0:  g.fillPolygon(new int[]{10, 25, 40}, new int[]{40, 10, 40}, 3); break;
+						case 90: g.fillPolygon(new int[]{10, 40, 10}, new int[]{10, 25, 40}, 3); break;
+						case 180:g.fillPolygon(new int[]{10, 40, 25}, new int[]{10, 10, 40}, 3); break;
+						default: g.fillPolygon(new int[]{10, 40, 40}, new int[]{25, 10, 40}, 3);
+					}
 				}
-            }
+			} catch (java.util.ConcurrentModificationException e) {
+
+			}
         }
 	}
 
-	public GUI() {
+	public GUI(int WAREHOUSES, int INIT_MAILS, int N_ROBOTS, int HOUSES) {
 		setTitle("Mail Delivery");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setLayout(null);
 		setSize(555, 625);
 		add(createButtonPanel());
 		
-		Board.initialize();
+		Board.initialize(WAREHOUSES, INIT_MAILS, N_ROBOTS, HOUSES);
 		Board.associateGUI(this);
 		
 		boardPanel = new JPanel();
@@ -78,6 +82,7 @@ public class GUI extends JFrame {
 		Board.displayObjects();
 		update();
 		add(boardPanel);
+		Board.start();
 	}
 
 	public void displayBoard() {
