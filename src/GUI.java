@@ -68,8 +68,8 @@ public class GUI extends JFrame {
 		boardPanel.setSize(new Dimension(500,500));
 		boardPanel.setLocation(new Point(20,60));
 		
-		nX = Board.N_X;
-		nY = Board.N_Y;
+		nX = Board.nX;
+		nY = Board.nY;
 		boardPanel.setLayout(new GridLayout(nX,nY));
 		for(int i=0; i<nX; i++)
 			for(int j=0; j<nY; j++)
@@ -84,7 +84,7 @@ public class GUI extends JFrame {
 	public void displayBoard() {
 		for(int i=0; i<nX; i++){
 			for(int j=0; j<nY; j++){
-				int row=nY-j-1, col=i;
+				int row=j, col=i;
 				Block block = Board.getBlock(new Point(i,j));
 				JPanel p = ((JPanel)boardPanel.getComponent(row*nX+col));
 				p.setBackground(block.color);
@@ -94,14 +94,14 @@ public class GUI extends JFrame {
 	}
 	
 	public void removeObject(Entity object) {
-		int row=nY-object.point.y-1, col=object.point.x;
+		int row=object.point.y, col=object.point.x;
 		Cell p = (Cell)boardPanel.getComponent(row*nX+col);
 		p.setBorder(BorderFactory.createLineBorder(Color.white));			
 		p.entities.remove(object);
 	}
 	
 	public void displayObject(Entity object) {
-		int row=nY-object.point.y-1, col=object.point.x;
+		int row=object.point.y, col=object.point.x;
 		Cell p = (Cell)boardPanel.getComponent(row*nX+col);
 		p.setBorder(BorderFactory.createLineBorder(Color.white));			
 		p.entities.add(object);

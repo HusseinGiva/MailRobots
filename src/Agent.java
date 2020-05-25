@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Point;
 import java.util.*;
 
-import javafx.util.Pair;
 import src.Block.Shape;
 
 /**
@@ -13,14 +12,13 @@ import src.Block.Shape;
 public class Agent extends Entity {
 
 	public enum Desire { grab, drop }
-	public enum Action { moveAhead, rotate, grab, drop, rotateRight, rotateLeft}
+	public enum Action { moveAhead, grab, drop, rotateRight, rotateLeft}
 	
 	public static int NUM_MAIL = 8;
 	
 	public int direction = 90;
 	public Mail mail;
-	
-	public Point initialPoint;
+
 	public int mailLeft;
 	public Map<Point,Block> cityMap; //internal map of the city
 	
@@ -35,11 +33,10 @@ public class Agent extends Entity {
 	public Agent(Point point, Color color, List<Mail> mailList){
 		super(point, color);
 		mail = null;
-		initialPoint = point;
 		mailLeft = NUM_MAIL;
 		this.mailList = mailList;
-		cityMap = new HashMap<Point,Block>();
-		plan = new LinkedList<Action>();
+		cityMap = new HashMap<>();
+		plan = new LinkedList<>();
 	}
 
 	/**********************
@@ -65,7 +62,7 @@ public class Agent extends Entity {
 
 	private void deliberate() {
 
-		desires = new ArrayList<Desire>();
+		desires = new ArrayList<>();
 		if(mail()) desires.add(Desire.drop);
 		if(mailLeft > 0) desires.add(Desire.grab);
 		intention = new AbstractMap.SimpleEntry<>(desires.get(0), null);
@@ -81,7 +78,7 @@ public class Agent extends Entity {
 	}
 
 	private void buildPlan() {
-		plan = new LinkedList<Action>();
+		plan = new LinkedList<>();
 		if(intention.getValue()==null) return;
 		switch(intention.getKey()) {
 			case grab :
@@ -96,7 +93,7 @@ public class Agent extends Entity {
 	}
 
 	private void rebuildPlan() {
-		plan = new LinkedList<Action>();
+		plan = new LinkedList<>();
 		for(int i=0; i<4; i++) agentReactiveDecision(); //attempt to come out of a conflict with full plan
 	}
 
@@ -176,13 +173,9 @@ public class Agent extends Entity {
 		}*/
 	}
 
-	public void receiveMessage(Action action, Mail ml) {
+	public void receiveMessage(Mail ml) {
 		mailLeft--;
-		for (Mail m: mailList) {
-			if (m.getMailId() == ml.getMailId()) {
-				mailList.remove(m);
-			}
-		}
+		mailList.removeIf(m -> m.getMailId().equals(ml.getMailId()));
 	}
 
 
@@ -191,14 +184,14 @@ public class Agent extends Entity {
 	/*******************************/
 
 	private Queue<Action> buildPathPlan(Point p1, Point p2) {
-		Stack<Point> path = new Stack<Point>();
+		Stack<Point> path = new Stack<>();
 		Node node = shortestPath(p1,p2);
 		path.add(node.point);
 		while(node.parent!=null) {
 			node = node.parent;
 			path.push(node.point);
 		}
-		Queue<Action> result = new LinkedList<Action>();
+		Queue<Action> result = new LinkedList<>();
 		p1 = path.pop();
 		int auxdirection = direction;
 		while(!path.isEmpty()) {
@@ -213,7 +206,7 @@ public class Agent extends Entity {
 	}
 
 	private List<Action> rotations(Point p1, Point p2) {
-		List<Action> result = new ArrayList<Action>();
+		List<Action> result = new ArrayList<>();
 		while(!p2.equals(aheadPosition())) {
 			Action action = rotate(p1,p2);
 			if(action==null) break;
@@ -289,6 +282,7 @@ public class Agent extends Entity {
 		for (Mail m: mailList) {
 			if (m.getMailSource() == ahead) {
 				notEmpty = true;
+				break;
 			}
 		}
 		return notEmpty;
@@ -338,8 +332,9 @@ public class Agent extends Entity {
 	/* Cargo box */
 	public void grabMail() {
 		mail = getBestPackageWarehouse(ahead);
+		System.out.println("pickup");
 		mailLeft--;
-		Board.sendMessage(Action.grab, mail);
+		Board.sendMessage(mail);
 	}
 
 	/* Drop box */
@@ -376,7 +371,7 @@ public class Agent extends Entity {
 	}
 
 	private Mail getBestPackageWarehouse(Point ahead) {
-		List<Mail> warehouseMailList = new ArrayList<Mail>();
+		List<Mail> warehouseMailList = new ArrayList<>();
 		for (Mail m: mailList) {
 			if (m.getMailSource().equals(ahead)) {
 				warehouseMailList.add(m);
@@ -421,7 +416,7 @@ public class Agent extends Entity {
 	public Node shortestPath(Point src, Point dest) {
 		boolean[][] visited = new boolean[100][100];
 		visited[src.x][src.y] = true;
-		Queue<Node> q = new LinkedList<Node>();
+		Queue<Node> q = new LinkedList<>();
 		q.add(new Node(src,null)); //enqueue source cell
 
 		//access the 4 neighbours of a given cell
@@ -431,7 +426,7 @@ public class Agent extends Entity {
 		while (!q.isEmpty()){//do a BFS
 			Node curr = q.remove(); //dequeue the front cell and enqueue its adjacent cells
 			Point pt = curr.point;
-			//System.out.println(">"+pt);
+			System.out.println(">"+pt);
 			for (int i = 0; i < 4; i++) {
 				int x = pt.x + row[i], y = pt.y + col[i];
 				if(x==dest.x && y==dest.y) return new Node(dest,curr);

@@ -20,7 +20,7 @@ public class Board {
 
 	/** The environment */
 
-	public static final int nX = 10, nY = 10, WAREHOUSES = 2, INIT_MAILS = 1000, N_ROBOTS = 3, HOUSES = 5;
+	public static final int nX = 10, nY = 10, WAREHOUSES = 2, INIT_MAILS = 10, N_ROBOTS = 3, HOUSES = 5;
 	private static Block[][] board;
 	private static Entity[][] objects;
 	private static List<Agent> robots;
@@ -92,6 +92,7 @@ public class Board {
 					different = true;
 				}
 			}
+			System.out.println(point);
 			Warehouse warehouse = new Warehouse(Shape.warehouse, point, Color.red, INIT_MAILS, nX, nY, warehouses);
 			warehouses.add(warehouse);
 			board[point.x][point.y] = warehouse;
@@ -142,6 +143,9 @@ public class Board {
 	}
 	public static List<Agent> getAgents() {
 		return robots;
+	}
+	public static List<House> getHouses() {
+		return houses;
 	}
 	public static Block getBlock(Point point) {
 		return board[point.x][point.y];
@@ -201,8 +205,8 @@ public class Board {
 		for(Agent a : robots) a.receiveMessage(point, shape, color, free);
 	}
 
-	public static void sendMessage(Action action, Mail ml) {
-		for(Agent a : robots) a.receiveMessage(action, ml);
+	public static void sendMessage(Mail ml) {
+		for(Agent a : robots) a.receiveMessage(ml);
 	}
 
 	public static void step() {

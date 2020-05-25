@@ -19,39 +19,15 @@ public class Warehouse extends Block {
         List<Mail> resp = new LinkedList<>();
         Random rd = new Random();
         for (int i = 0; i < initialMails; i++) {
-            Point point = new Point(rd.nextInt(nX), rd.nextInt(nY));
-            boolean different = false;
-            boolean exit = true;
-            while (!different && point.equals(avoid)) {
-                for (Warehouse w: warehouses) {
-                    if (w.point.equals(point)) {
-                        point = new Point(rd.nextInt(nX), rd.nextInt(nY));
-                        exit = false;
-                        break;
-                    }
-                }
-                if (exit == true) {
-                    different = true;
-                }
-            }
-            // generate the delivery point for the mail
-            // avoiding it to be the same as the warehouse location
+            Point point = Board.getHouses().get(rd.nextInt(Board.getHouses().size())).point;
+            System.out.println(this.point + " " + point);
             resp.add(new Mail(this.point, point));
         }
         return resp;
     }
 
-
     public List<Mail> getMailList() {
         return mails;
-    }
-
-    public void removeMail(Mail mail) {
-        mails.remove(mail);
-    }
-
-    public Boolean isEmpty() {
-        return mails.isEmpty();
     }
 
 }
