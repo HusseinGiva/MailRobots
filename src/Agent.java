@@ -385,7 +385,7 @@ public class Agent extends Entity {
 			}
 		}
 		// Agent with common optimality in its interest
-		minimumDist = point.distance(mailList.get(0).getMailSource()) + mailList.get(0).getMailSource().distance(mailList.get(0).getMailDest());
+		/*minimumDist = point.distance(mailList.get(0).getMailSource()) + mailList.get(0).getMailSource().distance(mailList.get(0).getMailDest());
 		for (Mail m: mailList) {
 			if ((point.distance(m.getMailSource()) + m.getMailSource().distance(m.getMailDest())) < minimumDist) {
 				for (Agent a: Board.getAgents()) {
@@ -395,7 +395,7 @@ public class Agent extends Entity {
 					}
 				}
 			}
-		}
+		}*/
 		return minimum;
 	}
 

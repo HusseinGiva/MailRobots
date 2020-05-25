@@ -54,7 +54,7 @@ public class GUI extends JFrame {
 	}
 
 	public GUI() {
-		setTitle("Mail Delivery");
+		setTitle("Mail Robots");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setLayout(null);
 		setSize(555, 625);

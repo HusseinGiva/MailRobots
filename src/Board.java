@@ -2,9 +2,7 @@ package src;
 
 import java.awt.Color;
 import java.awt.Point;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import src.Agent.Action;
 import src.Block.Shape;
@@ -17,12 +15,16 @@ public class Board {
 
 	/** The environment */
 
-	public static final int nX = 10, nY = 10, WAREHOUSES = 2, MAX_MAILS = 10, N_ROBOTS = 3, HOUSES = 10;
+	public static final int nX = 15, nY = 15, WAREHOUSES = 5, MAX_MAILS = 20, N_ROBOTS = 5, HOUSES = 15;
 	private static Block[][] board;
 	private static Entity[][] objects;
 	private static List<Agent> robots;
 	private static List<Warehouse> warehouses;
 	private static List<House> houses;
+	private static List<Point> housePoints;
+	private static List<Point> wareHousePoints;
+	private static List<Point> agentPoints;
+	private static List<Point> avoid;
 
 	/****************************
 	 ***** A: SETTING BOARD *****
@@ -37,56 +39,29 @@ public class Board {
 				board[i][j] = new Block(Shape.free, Color.lightGray);
 			}
 		}
-		Random rd = new Random();
+
+
 
 		/** B: create destinations */
 		houses = new ArrayList<>();
+		avoid = new ArrayList<>();
+		housePoints = generatePoints(HOUSES, avoid);
+		avoid.addAll(housePoints);
 		for (int i = 0; i < HOUSES; i++) {
-			Point point = new Point(rd.nextInt(nX), rd.nextInt(nY));
-			boolean different = false;
-			boolean exit = true;
-			while (!different) {
-				for (House h : houses) {
-					if (h.point.equals(point)) {
-						point = new Point(rd.nextInt(nX), rd.nextInt(nY));
-						exit = false;
-						break;
-					}
-				}
-				if (exit) {
-					different = true;
-				}
-			}
+			Point point = housePoints.get(i);
 			House house = new House(Shape.house, point, Color.green);
 			houses.add(house);
 			board[point.x][point.y] = house;
 		}
 
+		Random rd = new Random();
+
 		/** C: create warehouses */
 		warehouses = new ArrayList<>();
+		wareHousePoints = generatePoints(WAREHOUSES, avoid);
+		avoid.addAll(wareHousePoints);
 		for (int i = 0; i < WAREHOUSES; i++) {
-			Point point = new Point(rd.nextInt(nX), rd.nextInt(nY));
-			boolean different = false;
-			boolean exit = true;
-			while (!different) {
-				for (Warehouse w : warehouses) {
-					if (w.point.equals(point)) {
-						point = new Point(rd.nextInt(nX), rd.nextInt(nY));
-						exit = false;
-						break;
-					}
-				}
-				for (House h: houses) {
-					if (h.point.equals(point)) {
-						point = new Point(rd.nextInt(nX), rd.nextInt(nY));
-						exit = false;
-						break;
-					}
-				}
-				if (exit) {
-					different = true;
-				}
-			}
+			Point point = wareHousePoints.get(i);
 			int initMails = rd.nextInt(MAX_MAILS); // If we want an equal distribution of number of packages for each warehouse just use MAX_MAILS as argument in the next line
 			System.out.println("Warehouse " + point + " has " + initMails + " packages to be delivered.");
 			Warehouse warehouse = new Warehouse(Shape.warehouse, point, Color.red, initMails);
@@ -96,29 +71,9 @@ public class Board {
 
 		/** D: create agents randomly dispersed */
 		robots = new ArrayList<>();
+		agentPoints = generatePoints(N_ROBOTS, avoid);
 		for(int j = 0; j < N_ROBOTS; j++) {
-			Point point = new Point(rd.nextInt(nX), rd.nextInt(nY));
-			boolean different = false;
-			boolean exit = true;
-			while (!different) {
-				for (Warehouse w : warehouses) {
-					if (w.point.equals(point)) {
-						point = new Point(rd.nextInt(nX), rd.nextInt(nY));
-						exit = false;
-						break;
-					}
-				}
-				for (House h : houses) {
-					if (h.point.equals(point)) {
-						point = new Point(rd.nextInt(nX), rd.nextInt(nY));
-						exit = false;
-						break;
-					}
-				}
-				if (exit) {
-					different = true;
-				}
-			}
+			Point point = agentPoints.get(j);
 			List<Mail> mailList = new ArrayList<>();
 			for (Warehouse w : warehouses) {
 				mailList.addAll(w.getMailList());
@@ -129,6 +84,20 @@ public class Board {
 		for (Agent agent : robots) {
 			objects[agent.point.x][agent.point.y] = agent;
 		}
+	}
+
+	private static List<Point> generatePoints(int size, List<Point> avoid) {
+		Random rd = new Random();
+		List<Point> resp = new ArrayList<>();
+		Point point;
+		while (resp.size() < size) {
+			point = new Point(rd.nextInt(nX), rd.nextInt(nY));
+			if (!avoid.contains(point)) {
+				resp.add(point);
+				avoid.add(point);
+			}
+		}
+		return resp;
 	}
 	
 	/****************************
