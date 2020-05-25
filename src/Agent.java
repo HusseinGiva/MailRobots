@@ -21,26 +21,23 @@ public class Agent extends Entity {
 	public Mail mail;
 	
 	public Point initialPoint;
-	public int mailDelivered, mailLeft;
+	public int mailLeft;
 	public Map<Point,Block> cityMap; //internal map of the city
-	//public List<Point> freeShelves; //free shelves
-	public List<Point> boxedRamp; //ramp cells with boxes
 	
 	public List<Desire> desires;
+	public List<Mail> mailList;
 	public Pair<Desire,Point> intention;
 	public Queue<Action> plan;
-	public Action lastAction;
+
 	
 	private Point ahead;
 	
-	public Agent(Point point, Color color){ 
+	public Agent(Point point, Color color, List<Mail> mailList){
 		super(point, color);
 		mail = null;
 		initialPoint = point;
-		mailDelivered = 0;
 		mailLeft = NUM_MAIL;
-		freeShelves = new ArrayList<Point>();
-		boxedRamp = new ArrayList<Point>();
+		this.mailList = mailList;
 		cityMap = new HashMap<Point,Block>();
 		plan = new LinkedList<Action>();
 	}
@@ -69,24 +66,17 @@ public class Agent extends Entity {
 	private void deliberate() {
 
 		desires = new ArrayList<Desire>();
-		if(cargo()) desires.add(Desire.drop);
+		if(mail()) desires.add(Desire.drop);
 		if(mailLeft > 0) desires.add(Desire.grab);
-		if(mailLeft == 0) desires.add(Desire.initialPosition);
-		intention = new AbstractMap.SimpleEntry<>(desires.get(0),null);
+		intention = new AbstractMap.SimpleEntry<>(desires.get(0), null);
 
 		switch(intention.getKey()) { //high-priority desire
 			case grab :
-				if(!rampBoxes.isEmpty()) intention.setValue(rampBoxes.get(0));
+				intention.setValue(getBestPackage().getMailSource());
 				break;
 			case drop :
-				Color boxcolor = cargoColor();
-				for(Point house : houses)
-					if(cityMap.get(house).point.equals(boxcolor)) {
-						intention.setValue(house);
-						break;
-					}
+				intention.setValue(mailDest());
 				break;
-			case initialPosition : intention.setValue(initialPoint);
 		}
 	}
 
@@ -102,9 +92,6 @@ public class Agent extends Entity {
 				plan = buildPathPlan(point,intention.getValue());
 				plan.add(Action.drop);
 				break;
-			case initialPosition :
-				plan = buildPathPlan(point,intention.getValue());
-				plan.add(Action.moveAhead);
 		}
 	}
 
@@ -116,8 +103,8 @@ public class Agent extends Entity {
 	private boolean isPlanSound(Action action) {
 		switch(action) {
 			case moveAhead : return isFreeCell();
-			case grab : return isBoxAhead();
-			case drop : return isShelf() && !isBoxAhead() && shelfColor().equals(cargoColor());
+			case grab : return isWarehouseNotEmpty();
+			case drop : return isHouse() && ahead.equals(mail.getMailDest());
 			default : return true;
 		}
 	}
@@ -127,21 +114,20 @@ public class Agent extends Entity {
 			case moveAhead : moveAhead(); return;
 			case rotateRight : rotateRight(); return;
 			case rotateLeft : rotateLeft(); return;
-			case grab : grabBox(); return;
-			case drop : dropBox(); return;
+			case grab : grabMail(); return;
+			case drop : dropMail(); return;
 		}
 	}
 
 	private boolean impossibleIntention() {
-		if(intention.getKey().equals(Desire.grab)) return boxesOnRamp == 0;
+		if(intention.getKey().equals(Desire.grab)) return mailLeft == 0;
 		else return false;
 	}
 
 	private boolean succeededIntention() {
 		switch(intention.getKey()) {
-			case grab : return cargo();
-			case drop : return !cargo();
-			case initialPosition : return point.equals(initialPoint);
+			case grab : return mail();
+			case drop : return !mail();
 		}
 		return false;
 	}
@@ -157,8 +143,8 @@ public class Agent extends Entity {
 	public void agentReactiveDecision() {
 		ahead = aheadPosition();
 		if(isWall()) rotateRandomly();
-		else if(isRamp() && isBoxAhead() && !cargo()) grabBox();
-		else if(canDropBox()) dropBox();
+		else if(isWarehouse() && isWarehouseNotEmpty() && !mail()) grabMail();
+		else if(canDropMail()) dropMail();
 		else if(!isFreeCell()) rotateRandomly();
 		else if(random.nextInt(5) == 0) rotateRandomly();
 		else moveAhead();
@@ -170,31 +156,32 @@ public class Agent extends Entity {
 
 	private void updateBeliefs() {
 		ahead = aheadPosition();
-		if(isWall() || isRoomFloor()) return;
-		if(isRamp()) Board.sendMessage(ahead, cellType(), cellColor(), cargo() ? !isBoxAhead() : true);
-		else if(canDropBox()) Board.sendMessage(ahead, cellType(), cellColor(), false);
-		else Board.sendMessage(ahead, cellType(), cellColor(), !isBoxAhead());
+		if(isWall() || isRoad()) return;
+		if(isWarehouse()) Board.sendMessage(ahead, cellType(), cellColor(), mail() ? !isWarehouseNotEmpty() : true);
+		else if(canDropMail()) Board.sendMessage(ahead, cellType(), cellColor(), false);
+		else Board.sendMessage(ahead, cellType(), cellColor(), !isWarehouseNotEmpty());
 	}
 
 	public void receiveMessage(Point point, Shape shape, Color color, Boolean free) {
-		warehouse.put(point, new Block(shape,color));
-		if(shape.equals(Shape.shelf)) {
-			if(free) freeShelves.add(point);
+		cityMap.put(point, new Block(shape,color));
+		/*if(shape.equals(Shape.house)) {
+			if (free) freeShelves.add(point);
 			else freeShelves.remove(point);
 		}
-		else if(shape.equals(Shape.ramp)) {
-			if(free) rampBoxes.remove(point);
-			else rampBoxes.add(point);
-		}
+		else if(shape.equals(Shape.warehouse)) {
+			if (free) {
+				mailList.remove(getBestPackageWarehouse(point));
+			}
+			else mailList.add(point);
+		}*/
 	}
 
-	public void receiveMessage(Action action, Point pt) {
-		if(action.equals(Action.drop)) {
-			boxesOnShelves++;
-			freeShelves.remove(pt);
-		} else if(action.equals(Action.grab)) {
-			boxesOnRamp--;
-			rampBoxes.remove(pt);
+	public void receiveMessage(Action action, Mail ml) {
+		mailLeft--;
+		for (Mail m: mailList) {
+			if (m.getMailId() == ml.getMailId()) {
+				mailList.remove(m);
+			}
 		}
 	}
 
@@ -261,28 +248,17 @@ public class Agent extends Entity {
 	}
 
 	/* Return the color of the box */
-	public Color cargoDest() {
-		return mail.color;
-	}
-
-	/* Return the color of the shelf ahead or 0 otherwise */
-	public Color shelfColor(){
-		return Board.getBlock(ahead).color;
+	public Point mailDest() {
+		return mail.getMailDest();
 	}
 
 	/* Check if the cell ahead is floor (which means not a wall, not a shelf nor a ramp) and there are any robot there */
 	public boolean isFreeCell() {
-		return isRoomFloor() && Board.getEntity(ahead)==null;
+		return isRoad() && Board.getEntity(ahead)==null;
 	}
 
-	public boolean isRoomFloor() {
+	public boolean isRoad() {
 		return Board.getBlock(ahead).shape.equals(Shape.free);
-	}
-
-	/* Check if the cell ahead contains a box */
-	public boolean isBoxAhead(){
-		Entity entity = Board.getEntity(ahead);
-		return entity!=null && entity instanceof Box;
 	}
 
 	/* Return the type of cell */
@@ -296,15 +272,26 @@ public class Agent extends Entity {
 	}
 
 	/* Check if the cell ahead is a shelf */
-	public boolean isShelf() {
+	public boolean isHouse() {
 		Block block = Board.getBlock(ahead);
-		return block.shape.equals(Shape.shelf);
+		return block.shape.equals(Shape.house);
 	}
 
 	/* Check if the cell ahead is a ramp */
-	public boolean isRamp(){
+	public boolean isWarehouse(){
 		Block block = Board.getBlock(ahead);
-		return block.shape.equals(Shape.ramp);
+		return block.shape.equals(Shape.warehouse);
+	}
+
+	/* Check if the cell ahead is a ramp */
+	public boolean isWarehouseNotEmpty(){
+		boolean notEmpty = false;
+		for (Mail m: mailList) {
+			if (m.getMailSource() == ahead) {
+				notEmpty = true;
+			}
+		}
+		return notEmpty;
 	}
 
 	/* Check if the cell ahead is a wall */
@@ -318,10 +305,9 @@ public class Agent extends Entity {
 	}
 
 	/* Check if we can drop a box in the shelf ahead */
-	private boolean canDropBox() {
-		return isShelf() && !isBoxAhead() && cargo() && shelfColor().equals(cargoColor());
+	private boolean canDropMail() {
+		return isHouse() && mail() && ahead.equals(mail.getMailDest());
 	}
-
 
 	/**********************/
 	/**** F: actuators ****/
@@ -346,27 +332,66 @@ public class Agent extends Entity {
 	/* Move agent forward */
 	public void moveAhead() {
 		Board.updateEntityPosition(point,ahead);
-		if(cargo()) mail.moveMail(ahead);
 		point = ahead;
 	}
 
 	/* Cargo box */
-	public void grabBox() {
-		mail = (Mail) Board.getEntity(ahead);
-		mail.grabMail(point);
-		Board.sendMessage(Action.grab, ahead);
+	public void grabMail() {
+		mail = getBestPackageWarehouse(ahead);
+		mailLeft--;
+		Board.sendMessage(Action.grab, mail);
 	}
 
 	/* Drop box */
-	public void dropBox() {
-		mail.dropMail(ahead);
+	public void dropMail() {
 		mail = null;
-		Board.sendMessage(Action.drop, ahead);
 	}
 
 	/**********************/
 	/**** G: auxiliary ****/
 	/**********************/
+
+	private Mail getBestPackage() {
+		Mail minimum = mailList.get(0);
+		double minimumDist = point.distance(minimum.getMailSource()) + minimum.getMailSource().distance(minimum.getMailDest());
+		for (Mail m: mailList) {
+			if ((point.distance(m.getMailSource()) + m.getMailSource().distance(m.getMailDest())) < minimumDist) {
+				minimum = m;
+				minimumDist = point.distance(m.getMailSource()) + m.getMailSource().distance(m.getMailDest());
+			}
+		}
+		// Agent with common optimality in its interest
+		minimumDist = point.distance(mailList.get(0).getMailSource()) + mailList.get(0).getMailSource().distance(mailList.get(0).getMailDest());
+		for (Mail m: mailList) {
+			if ((point.distance(m.getMailSource()) + m.getMailSource().distance(m.getMailDest())) < minimumDist) {
+				for (Agent a: Board.getAgents()) {
+					if ((!a.equals(this)) && (((a.mail()) && (a.mail.getMailDest().distance(m.getMailSource()) + m.getMailSource().distance(m.getMailDest()) < point.distance(m.getMailSource()) + m.getMailSource().distance(m.getMailDest()))) || (!a.mail()) && (a.point.distance(m.getMailSource()) + m.getMailSource().distance(m.getMailDest()) < point.distance(m.getMailSource()) + m.getMailSource().distance(m.getMailDest())))) {
+						minimum = m;
+						minimumDist = point.distance(m.getMailSource()) + m.getMailSource().distance(m.getMailDest());
+					}
+				}
+			}
+		}
+		return minimum;
+	}
+
+	private Mail getBestPackageWarehouse(Point ahead) {
+		List<Mail> warehouseMailList = new ArrayList<Mail>();
+		for (Mail m: mailList) {
+			if (m.getMailSource().equals(ahead)) {
+				warehouseMailList.add(m);
+			}
+		}
+		Mail minimum = warehouseMailList.get(0);
+		double minimumDist = ahead.distance(minimum.getMailDest());
+		for (Mail m: warehouseMailList) {
+			if (ahead.distance(m.getMailDest()) < minimumDist) {
+				minimum = m;
+				minimumDist = ahead.distance(m.getMailDest());
+			}
+		}
+		return minimum;
+	}
 
 	/* Position ahead */
 	private Point aheadPosition() {

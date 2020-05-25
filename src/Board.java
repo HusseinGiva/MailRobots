@@ -20,7 +20,7 @@ public class Board {
 
 	/** The environment */
 
-	public static final int N_X = 10, N_Y = 10, WAREHOUSES = 2, INIT_MAILS = 1000, N_ROBOTS = 3, HOUSES = 5;
+	public static final int nX = 10, nY = 10, WAREHOUSES = 2, INIT_MAILS = 1000, N_ROBOTS = 3, HOUSES = 5;
 	private static Block[][] board;
 	private static Entity[][] objects;
 	private static List<Agent> robots;
@@ -36,9 +36,9 @@ public class Board {
 	public static void initialize() {
 
 		/** A: create board */
-		board = new Block[Board.N_X][Board.N_Y];
-		for(int i = 0; i< Board.N_X; i++)
-			for(int j = 0; j< Board.N_Y; j++)
+		board = new Block[Board.nX][Board.nY];
+		for(int i = 0; i< Board.nX; i++)
+			for(int j = 0; j< Board.nY; j++)
 				board[i][j] = new Block(Shape.free, Color.lightGray);
 
 		Random rd = new Random();
@@ -46,14 +46,14 @@ public class Board {
 		/** B: create destinations */
 		houses = new ArrayList<>();
 		for (int i = 0; i < HOUSES; i++) {
-			Point point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+			Point point = new Point(rd.nextInt(nX), rd.nextInt(nY));
 			// avoid the warehouse point
 			boolean different = false;
 			boolean exit = true;
 			while (!different) {
 				for (House h : houses) {
 					if (h.point.equals(point)) {
-						point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+						point = new Point(rd.nextInt(nX), rd.nextInt(nY));
 						exit = false;
 						break;
 					}
@@ -70,20 +70,20 @@ public class Board {
 		/** C: create warehouses */
 		warehouses = new ArrayList<>();
 		for (int i = 0; i < WAREHOUSES; i++) {
-			Point point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+			Point point = new Point(rd.nextInt(nX), rd.nextInt(nY));
 			boolean different = false;
 			boolean exit = true;
 			while (!different) {
 				for (Warehouse w : warehouses) {
 					if (w.point.equals(point)) {
-						point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+						point = new Point(rd.nextInt(nX), rd.nextInt(nY));
 						exit = false;
 						break;
 					}
 				}
 				for (House h: houses) {
 					if (h.point.equals(point)) {
-						point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+						point = new Point(rd.nextInt(nX), rd.nextInt(nY));
 						exit = false;
 						break;
 					}
@@ -92,7 +92,7 @@ public class Board {
 					different = true;
 				}
 			}
-			Warehouse warehouse = new Warehouse(Shape.warehouse, point, Color.red, INIT_MAILS, N_X, N_Y, warehouses);
+			Warehouse warehouse = new Warehouse(Shape.warehouse, point, Color.red, INIT_MAILS, nX, nY, warehouses);
 			warehouses.add(warehouse);
 			board[point.x][point.y] = warehouse;
 		}
@@ -100,21 +100,21 @@ public class Board {
 		/** D: create agents randomly dispersed */
 		robots = new ArrayList<>();
 		for(int j = 0; j< N_ROBOTS; j++) {
-			Point point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+			Point point = new Point(rd.nextInt(nX), rd.nextInt(nY));
 			// avoid the warehouse point
 			boolean different = false;
 			boolean exit = true;
 			while (!different) {
 				for (Warehouse w : warehouses) {
 					if (w.point.equals(point)) {
-						point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+						point = new Point(rd.nextInt(nX), rd.nextInt(nY));
 						exit = false;
 						break;
 					}
 				}
 				for (House h : houses) {
 					if (h.point.equals(point)) {
-						point = new Point(rd.nextInt(N_X), rd.nextInt(N_Y));
+						point = new Point(rd.nextInt(nX), rd.nextInt(nY));
 						exit = false;
 						break;
 					}
@@ -123,9 +123,13 @@ public class Board {
 					different = true;
 				}
 			}
-			robots.add(new Agent(point, Color.pink));
+			List<Mail> mailList = new ArrayList<Mail>();
+			for (Warehouse w : warehouses) {
+				mailList.addAll(w.getMailList());
+			}
+			robots.add(new Agent(point, Color.pink, mailList));
 		}
-		objects = new Entity[Board.N_X][Board.N_Y];
+		objects = new Entity[Board.nX][Board.nY];
 		for(Agent agent : robots) objects[agent.point.x][agent.point.y]=agent;
 	}
 	
@@ -135,6 +139,9 @@ public class Board {
 	
 	public static Entity getEntity(Point point) {
 		return objects[point.x][point.y];
+	}
+	public static List<Agent> getAgents() {
+		return robots;
 	}
 	public static Block getBlock(Point point) {
 		return board[point.x][point.y];
@@ -194,8 +201,8 @@ public class Board {
 		for(Agent a : robots) a.receiveMessage(point, shape, color, free);
 	}
 
-	public static void sendMessage(Action action, Point pt) {
-		for(Agent a : robots) a.receiveMessage(action, pt);
+	public static void sendMessage(Action action, Mail ml) {
+		for(Agent a : robots) a.receiveMessage(action, ml);
 	}
 
 	public static void step() {
@@ -212,12 +219,10 @@ public class Board {
 
 	public static void displayObjects(){
 		for(Agent agent : robots) GUI.displayObject(agent);
-		for(Mail mail : packages) GUI.displayObject(mail);
 	}
 
 	public static void removeObjects(){
 		for(Agent agent : robots) GUI.removeObject(agent);
-		for(Mail mail : packages) GUI.removeObject(mail);
 	}
 
 	public static void associateGUI(GUI graphicalInterface) {
