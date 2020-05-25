@@ -92,7 +92,7 @@ public class Board {
 					different = true;
 				}
 			}
-			System.out.println(point);
+			//System.out.println(point);
 			Warehouse warehouse = new Warehouse(Shape.warehouse, point, Color.red, INIT_MAILS, nX, nY, warehouses);
 			warehouses.add(warehouse);
 			board[point.x][point.y] = warehouse;
@@ -201,12 +201,8 @@ public class Board {
 		GUI.update();
 	}
 
-	public static void sendMessage(Point point, Shape shape, Color color, boolean free) {
-		for(Agent a : robots) a.receiveMessage(point, shape, color, free);
-	}
-
-	public static void sendMessage(Mail ml) {
-		for(Agent a : robots) a.receiveMessage(ml);
+	public static void sendMessage(Action action, Mail ml) {
+		for(Agent a : robots) a.receiveMessage(action, ml);
 	}
 
 	public static void step() {

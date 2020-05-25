@@ -20,7 +20,7 @@ public class Warehouse extends Block {
         Random rd = new Random();
         for (int i = 0; i < initialMails; i++) {
             Point point = Board.getHouses().get(rd.nextInt(Board.getHouses().size())).point;
-            System.out.println(this.point + " " + point);
+            //System.out.println(this.point + " " + point);
             resp.add(new Mail(this.point, point));
         }
         return resp;

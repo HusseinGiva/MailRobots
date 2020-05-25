@@ -11,15 +11,15 @@ import src.Block.Shape;
  */
 public class Agent extends Entity {
 
-	public enum Desire { grab, drop }
-	public enum Action { moveAhead, grab, drop, rotateRight, rotateLeft}
+	public enum Desire { grab, drop, finalPosition }
+	public enum Action { moveAhead, grab, drop, rotateRight, rotateLeft, stay}
 	
-	public static int NUM_MAIL = 8;
+	public static int NUM_MAIL = 20;
 	
 	public int direction = 90;
 	public Mail mail;
 
-	public int mailLeft;
+	public int mailLeft, mailDelivered;
 	public Map<Point,Block> cityMap; //internal map of the city
 	
 	public List<Desire> desires;
@@ -34,6 +34,7 @@ public class Agent extends Entity {
 		super(point, color);
 		mail = null;
 		mailLeft = NUM_MAIL;
+		mailDelivered = 0;
 		this.mailList = mailList;
 		cityMap = new HashMap<>();
 		plan = new LinkedList<>();
@@ -44,19 +45,20 @@ public class Agent extends Entity {
 	 **********************/
 
 	public void agentDecision() {
+		if (mailDelivered < NUM_MAIL) {
+			updateBeliefs();
 
-		updateBeliefs();
+			if(!plan.isEmpty() && !succeededIntention() && !impossibleIntention()){
+				Action action = plan.remove();
+				if(isPlanSound(action)) execute(action);
+				else rebuildPlan();
+				if(reconsider()) deliberate();
 
-		if(!plan.isEmpty() && !succeededIntention() && !impossibleIntention()){
-			Action action = plan.remove();
-			if(isPlanSound(action)) execute(action);
-			else rebuildPlan();
-			if(reconsider()) deliberate();
-
-		} else {
-			deliberate();
-			buildPlan();
-			if(plan.isEmpty()) agentReactiveDecision();
+			} else {
+				deliberate();
+				buildPlan();
+				if(plan.isEmpty()) agentReactiveDecision();
+			}
 		}
 	}
 
@@ -65,6 +67,7 @@ public class Agent extends Entity {
 		desires = new ArrayList<>();
 		if(mail()) desires.add(Desire.drop);
 		if(mailLeft > 0) desires.add(Desire.grab);
+		if(mailLeft == 0) desires.add(Desire.finalPosition);
 		intention = new AbstractMap.SimpleEntry<>(desires.get(0), null);
 
 		switch(intention.getKey()) { //high-priority desire
@@ -74,6 +77,8 @@ public class Agent extends Entity {
 			case drop :
 				intention.setValue(mailDest());
 				break;
+			case finalPosition:
+				intention.setValue(this.point);
 		}
 	}
 
@@ -89,6 +94,9 @@ public class Agent extends Entity {
 				plan = buildPathPlan(point,intention.getValue());
 				plan.add(Action.drop);
 				break;
+			case finalPosition :
+				plan = buildPathPlan(point,intention.getValue());
+				plan.add(Action.moveAhead);
 		}
 	}
 
@@ -153,29 +161,19 @@ public class Agent extends Entity {
 
 	private void updateBeliefs() {
 		ahead = aheadPosition();
-		if(isWall() || isRoad()) return;
-		if(isWarehouse()) Board.sendMessage(ahead, cellType(), cellColor(), mail() ? !isWarehouseNotEmpty() : true);
+		//if(isWall() || isRoad()) return;
+		/*if(isWarehouse()) Board.sendMessage(ahead, cellType(), cellColor(), mail() ? !isWarehouseNotEmpty() : true);
 		else if(canDropMail()) Board.sendMessage(ahead, cellType(), cellColor(), false);
-		else Board.sendMessage(ahead, cellType(), cellColor(), !isWarehouseNotEmpty());
+		else Board.sendMessage(ahead, cellType(), cellColor(), !isWarehouseNotEmpty());*/
 	}
 
-	public void receiveMessage(Point point, Shape shape, Color color, Boolean free) {
-		cityMap.put(point, new Block(shape,color));
-		/*if(shape.equals(Shape.house)) {
-			if (free) freeShelves.add(point);
-			else freeShelves.remove(point);
+	public void receiveMessage(Action action, Mail ml) {
+		if(action.equals(Action.drop)) {
+			mailDelivered++;
+		} else if(action.equals(Action.grab)) {
+			mailLeft--;
+			mailList.removeIf(m -> m.getMailId().equals(ml.getMailId()));
 		}
-		else if(shape.equals(Shape.warehouse)) {
-			if (free) {
-				mailList.remove(getBestPackageWarehouse(point));
-			}
-			else mailList.add(point);
-		}*/
-	}
-
-	public void receiveMessage(Mail ml) {
-		mailLeft--;
-		mailList.removeIf(m -> m.getMailId().equals(ml.getMailId()));
 	}
 
 
@@ -254,16 +252,6 @@ public class Agent extends Entity {
 		return Board.getBlock(ahead).shape.equals(Shape.free);
 	}
 
-	/* Return the type of cell */
-	public Shape cellType() {
-		return Board.getBlock(ahead).shape;
-	}
-
-	/* Return the color of cell */
-	public Color cellColor() {
-		return Board.getBlock(ahead).color;
-	}
-
 	/* Check if the cell ahead is a shelf */
 	public boolean isHouse() {
 		Block block = Board.getBlock(ahead);
@@ -280,7 +268,7 @@ public class Agent extends Entity {
 	public boolean isWarehouseNotEmpty(){
 		boolean notEmpty = false;
 		for (Mail m: mailList) {
-			if (m.getMailSource() == ahead) {
+			if (m.getMailSource().equals(ahead)) {
 				notEmpty = true;
 				break;
 			}
@@ -332,13 +320,14 @@ public class Agent extends Entity {
 	/* Cargo box */
 	public void grabMail() {
 		mail = getBestPackageWarehouse(ahead);
-		System.out.println("pickup");
-		mailLeft--;
-		Board.sendMessage(mail);
+		System.out.println("pickup " + mail.getMailSource() + " " + mail.getMailDest());
+		Board.sendMessage(Action.grab, mail);
 	}
 
 	/* Drop box */
 	public void dropMail() {
+		System.out.println("dropoff " + mail.getMailSource() + " " + mail.getMailDest());
+		Board.sendMessage(Action.drop, mail);
 		mail = null;
 	}
 
@@ -426,11 +415,11 @@ public class Agent extends Entity {
 		while (!q.isEmpty()){//do a BFS
 			Node curr = q.remove(); //dequeue the front cell and enqueue its adjacent cells
 			Point pt = curr.point;
-			System.out.println(">"+pt);
+			//System.out.println(">"+pt);
 			for (int i = 0; i < 4; i++) {
 				int x = pt.x + row[i], y = pt.y + col[i];
 				if(x==dest.x && y==dest.y) return new Node(dest,curr);
-				if(!isWall(x,y) && !cityMap.containsKey(new Point(x,y)) && !visited[x][y]){
+				if(!isWall(x,y) && Board.getBlock(new Point(x,y)).shape.equals(Shape.free) && !visited[x][y]){
 					visited[x][y] = true;
 					q.add(new Node(new Point(x,y), curr));
 				}
