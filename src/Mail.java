@@ -19,6 +19,7 @@ public class Mail extends Thread {
 	/*****************************
 	 ***** AUXILIARY METHODS ***** 
 	 *****************************/
+
 	public Long getMailId() {
 		return id;
 	}

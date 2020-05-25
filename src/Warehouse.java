@@ -9,13 +9,13 @@ public class Warehouse extends Block {
     public Point point;
     private List<Mail> mails;
 
-    public Warehouse(Shape shape, Point point, Color color, int initialMails, int nX, int nY, List<Warehouse> warehouses) {
+    public Warehouse(Shape shape, Point point, Color color, int initialMails) {
         super(shape, color);
         this.point = point;
-        this.mails = generateRandomMails(initialMails, nX, nY, point, warehouses);
+        this.mails = generateRandomMails(initialMails);
     }
 
-    private List<Mail> generateRandomMails(int initialMails, int nX, int nY, Point avoid, List<Warehouse> warehouses) {
+    private List<Mail> generateRandomMails(int initialMails) {
         List<Mail> resp = new LinkedList<>();
         Random rd = new Random();
         for (int i = 0; i < initialMails; i++) {

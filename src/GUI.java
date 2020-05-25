@@ -19,11 +19,10 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 
-
 /**
  * Graphical interface
- * @author Rui Henriques
  */
+
 public class GUI extends JFrame {
 
 	private static final long serialVersionUID = 1L;
@@ -55,7 +54,7 @@ public class GUI extends JFrame {
 	}
 
 	public GUI() {
-		setTitle("Mail delivery");
+		setTitle("Mail Delivery");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setLayout(null);
 		setSize(555, 625);

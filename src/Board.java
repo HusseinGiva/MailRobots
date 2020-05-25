@@ -4,18 +4,15 @@ import java.awt.Color;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import src.Agent.Action;
 import src.Block.Shape;
 
-
-import java.util.Random;
-
-
 /**
  * Environment
- * @author Rui Henriques
  */
+
 public class Board {
 
 	/** The environment */
@@ -26,8 +23,6 @@ public class Board {
 	private static List<Agent> robots;
 	private static List<Warehouse> warehouses;
 	private static List<House> houses;
-	private static List<Mail> packages;
-
 
 	/****************************
 	 ***** A: SETTING BOARD *****
@@ -37,17 +32,17 @@ public class Board {
 
 		/** A: create board */
 		board = new Block[Board.nX][Board.nY];
-		for(int i = 0; i< Board.nX; i++)
-			for(int j = 0; j< Board.nY; j++)
+		for (int i = 0; i < Board.nX; i++) {
+			for(int j = 0; j < Board.nY; j++) {
 				board[i][j] = new Block(Shape.free, Color.lightGray);
-
+			}
+		}
 		Random rd = new Random();
 
 		/** B: create destinations */
 		houses = new ArrayList<>();
 		for (int i = 0; i < HOUSES; i++) {
 			Point point = new Point(rd.nextInt(nX), rd.nextInt(nY));
-			// avoid the warehouse point
 			boolean different = false;
 			boolean exit = true;
 			while (!different) {
@@ -58,7 +53,7 @@ public class Board {
 						break;
 					}
 				}
-				if (exit == true) {
+				if (exit) {
 					different = true;
 				}
 			}
@@ -88,21 +83,19 @@ public class Board {
 						break;
 					}
 				}
-				if (exit == true) {
+				if (exit) {
 					different = true;
 				}
 			}
-			//System.out.println(point);
-			Warehouse warehouse = new Warehouse(Shape.warehouse, point, Color.red, INIT_MAILS, nX, nY, warehouses);
+			Warehouse warehouse = new Warehouse(Shape.warehouse, point, Color.red, INIT_MAILS);
 			warehouses.add(warehouse);
 			board[point.x][point.y] = warehouse;
 		}
 
 		/** D: create agents randomly dispersed */
 		robots = new ArrayList<>();
-		for(int j = 0; j< N_ROBOTS; j++) {
+		for(int j = 0; j < N_ROBOTS; j++) {
 			Point point = new Point(rd.nextInt(nX), rd.nextInt(nY));
-			// avoid the warehouse point
 			boolean different = false;
 			boolean exit = true;
 			while (!different) {
@@ -120,18 +113,20 @@ public class Board {
 						break;
 					}
 				}
-				if (exit == true) {
+				if (exit) {
 					different = true;
 				}
 			}
-			List<Mail> mailList = new ArrayList<Mail>();
+			List<Mail> mailList = new ArrayList<>();
 			for (Warehouse w : warehouses) {
 				mailList.addAll(w.getMailList());
 			}
 			robots.add(new Agent(point, Color.pink, mailList));
 		}
 		objects = new Entity[Board.nX][Board.nY];
-		for(Agent agent : robots) objects[agent.point.x][agent.point.y]=agent;
+		for (Agent agent : robots) {
+			objects[agent.point.x][agent.point.y] = agent;
+		}
 	}
 	
 	/****************************
@@ -153,12 +148,6 @@ public class Board {
 	public static void updateEntityPosition(Point point, Point newpoint) {
 		objects[newpoint.x][newpoint.y] = objects[point.x][point.y];
 		objects[point.x][point.y] = null;
-	}	
-	public static void removeEntity(Point point) {
-		objects[point.x][point.y] = null;
-	}
-	public static void insertEntity(Entity entity, Point point) {
-		objects[point.x][point.y] = entity;
 	}
 
 	/***********************************
@@ -173,15 +162,16 @@ public class Board {
 		int time;
 		
 		public RunThread(int time){
-			this.time = time*time;
+			this.time = time * time;
 		}
 		
 	    public void run() {
-	    	while(true){
+	    	while (true) {
 	    		step();
 				try {
 					sleep(time);
-				} catch (InterruptedException e) {
+				}
+				catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 	    	}
@@ -202,12 +192,16 @@ public class Board {
 	}
 
 	public static void sendMessage(Action action, Mail ml) {
-		for(Agent a : robots) a.receiveMessage(action, ml);
+		for (Agent a : robots) {
+			a.receiveMessage(action, ml);
+		}
 	}
 
 	public static void step() {
 		removeObjects();
-		for(Agent a : robots) a.agentDecision();
+		for (Agent a : robots) {
+			a.agentDecision();
+		}
 		displayObjects();
 		GUI.update();
 	}
@@ -218,11 +212,15 @@ public class Board {
 	}
 
 	public static void displayObjects(){
-		for(Agent agent : robots) GUI.displayObject(agent);
+		for (Agent agent : robots) {
+			GUI.displayObject(agent);
+		}
 	}
 
 	public static void removeObjects(){
-		for(Agent agent : robots) GUI.removeObject(agent);
+		for (Agent agent : robots) {
+			GUI.removeObject(agent);
+		}
 	}
 
 	public static void associateGUI(GUI graphicalInterface) {
