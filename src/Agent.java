@@ -14,11 +14,9 @@ public class Agent extends Entity {
 
 	public enum Desire {grab, drop, finalPosition}
 	public enum Action {moveAhead, grab, drop, rotateRight, rotateLeft, stay}
-	
-	public static int NUM_MAIL = 20;
-	
+
 	public int direction = 90;
-	public int mailLeft, mailDelivered;
+	public int mailLeft, mailDelivered, totalMail;
 
 	public Mail mail;
 	private Point ahead;
@@ -31,7 +29,8 @@ public class Agent extends Entity {
 	public Agent(Point point, Color color, List<Mail> mailLst) {
 		super(point, color);
 		mail = null;
-		mailLeft = NUM_MAIL;
+		mailLeft = mailLst.size();
+		totalMail = mailLst.size();
 		mailDelivered = 0;
 		mailList = mailLst;
 		plan = new LinkedList<>();
@@ -42,7 +41,7 @@ public class Agent extends Entity {
 	 **********************/
 
 	public void agentDecision() {
-		if (mailDelivered < NUM_MAIL) {
+		if (mailDelivered < totalMail) {
 			updateBeliefs();
 			if ((!plan.isEmpty()) && (!succeededIntention()) && (!impossibleIntention())) {
 				Action action = plan.remove();
