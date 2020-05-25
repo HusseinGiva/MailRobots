@@ -29,7 +29,7 @@ public class GUI extends JFrame {
 	
 	static JTextField speed;
 	static JPanel boardPanel;
-	static JButton run, reset, step;
+	static JButton run, step;
 	private int nX, nY;
 
 	public class Cell extends JPanel {
@@ -121,13 +121,6 @@ public class GUI extends JFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				if(run.getText().equals("Run")) Board.step();
 				else Board.stop();
-			}
-		});
-		reset = new JButton("Reset");
-		panel.add(reset);
-		reset.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				Board.reset();
 			}
 		});
 		run = new JButton("Run");

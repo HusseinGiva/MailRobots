@@ -17,7 +17,7 @@ public class Board {
 
 	/** The environment */
 
-	public static final int nX = 15, nY = 15, WAREHOUSES = 5, INIT_MAILS = 40, N_ROBOTS = 5, HOUSES = 10;
+	public static final int nX = 10, nY = 10, WAREHOUSES = 2, MAX_MAILS = 10, N_ROBOTS = 3, HOUSES = 10;
 	private static Block[][] board;
 	private static Entity[][] objects;
 	private static List<Agent> robots;
@@ -87,7 +87,9 @@ public class Board {
 					different = true;
 				}
 			}
-			Warehouse warehouse = new Warehouse(Shape.warehouse, point, Color.red, INIT_MAILS);
+			int initMails = rd.nextInt(MAX_MAILS); // If we want an equal distribution of number of packages for each warehouse just use MAX_MAILS as argument in the next line
+			System.out.println("Warehouse " + point + " has " + initMails + " packages to be delivered.");
+			Warehouse warehouse = new Warehouse(Shape.warehouse, point, Color.red, initMails);
 			warehouses.add(warehouse);
 			board[point.x][point.y] = warehouse;
 		}
@@ -181,14 +183,6 @@ public class Board {
 	public static void run(int time) {
 		Board.runThread = new RunThread(time);
 		Board.runThread.start();
-	}
-
-	public static void reset() {
-		removeObjects();
-		initialize();
-		GUI.displayBoard();
-		displayObjects();	
-		GUI.update();
 	}
 
 	public static void sendMessage(Action action, Mail ml) {
