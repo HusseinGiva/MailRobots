@@ -36,7 +36,7 @@ public class Warehouse extends Block {
             }
             // generate the delivery point for the mail
             // avoiding it to be the same as the warehouse location
-            resp.add(new Mail(this.point, point, new Color(255, 255, 255, 255)));
+            resp.add(new Mail(this.point, point));
         }
         return resp;
     }

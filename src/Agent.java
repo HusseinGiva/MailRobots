@@ -26,7 +26,7 @@ public class Agent extends Entity {
 	
 	public List<Desire> desires;
 	public List<Mail> mailList;
-	public Pair<Desire,Point> intention;
+	public AbstractMap.SimpleEntry<Desire,Point> intention;
 	public Queue<Action> plan;
 
 	
